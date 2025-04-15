@@ -1,0 +1,46 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFF5FF"
+    tools:context=".MainActivity">
+
+    <!-- Botón 1: Agenda -->
+    <ImageButton
+        android:id="@+id/btnContactos"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/contacts"
+        android:contentDescription="Botón de contactos" />
+
+    <!-- Botón 2: Cámara -->
+    <ImageButton
+        android:id="@+id/btnCamara"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_below="@id/btnContactos"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/camera"
+        android:contentDescription="Botón de cámara" />
+
+    <!-- Botón 3: Mapa -->
+    <ImageButton
+        android:id="@+id/btnMapa"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        android:layout_below="@id/btnCamara"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/osmap"
+        android:contentDescription="Botón de mapa" />
+
+</RelativeLayout>
