@@ -5,27 +5,32 @@ import android.os.Bundle
 import android.widget.ImageButton
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import com.example.taller2.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+
+
+    lateinit var binding: ActivityMainBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root) //La asociacion de Front con Back
 
         val btnContactos: ImageButton = findViewById(R.id.btnContactos)
-        btnContactos.setOnClickListener {
+        binding.btnContactos.setOnClickListener {
             val intent = Intent(this, ContactosActivity::class.java)
             startActivity(intent)
         }
 
         val btnCamara = findViewById<ImageButton>(R.id.btnCamara)
-        btnCamara.setOnClickListener {
+        binding.btnCamara.setOnClickListener {
             val intent = Intent(this, CamaraGaleriaActivity::class.java)
             startActivity(intent)
         }
 
         val btnMapa = findViewById<ImageButton>(R.id.btnMapa)
-        btnMapa.setOnClickListener {
+        binding.btnMapa.setOnClickListener {
             val intent = Intent(this, MapaActivity::class.java)
             startActivity(intent)
         }

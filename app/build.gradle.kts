@@ -7,6 +7,10 @@ android {
     namespace = "com.example.taller2"
     compileSdk = 35
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId = "com.example.taller2"
         minSdk = 29
