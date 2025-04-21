@@ -12,6 +12,7 @@ import android.util.Log
 import android.widget.Toast
 
 import android.location.Geocoder
+import android.os.StrictMode
 import android.view.MotionEvent
 import android.widget.EditText
 import android.view.inputmethod.EditorInfo
@@ -26,8 +27,11 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.MapEventsOverlay
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import org.osmdroid.bonuspack.routing.OSRMRoadManager
+import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.File
@@ -43,7 +47,8 @@ class MapaActivity : AppCompatActivity() {
     private lateinit var sensorManager: SensorManager
     private var lightSensor: Sensor? = null
     private lateinit var lightListener: SensorEventListener
-
+    lateinit var roadManager: RoadManager
+    private var roadOverlay: Polyline? = null
 
     private var lastLocation: GeoPoint? = null
     private val gson = Gson()
@@ -56,6 +61,10 @@ class MapaActivity : AppCompatActivity() {
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
+
+        roadManager = OSRMRoadManager(this, "ANDROID")
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
 
         lightListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
@@ -208,7 +217,8 @@ class MapaActivity : AppCompatActivity() {
                 mostrarDistanciaDesdeUbicacionActual(punto)
             }
         } catch (e: Exception) {
-            Toast.makeText(this, "Error obteniendo dirección", Toast.LENGTH_SHORT).show()
+            Log.i("OSM_acticity", e.toString())
+            //Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -239,10 +249,32 @@ class MapaActivity : AppCompatActivity() {
             return
         }
 
-        val distancia = hasta.distanceToAsDouble(lastLocation)  // distancia en metros
+        drawRoute(lastLocation!!, hasta)
+        /*val distancia = hasta.distanceToAsDouble(lastLocation)  // distancia en metros
+        val distanciaFormateada = String.format(Locale.getDefault(), "%.2f", distancia)
+        Toast.makeText(this, "Distancia a marcador: $distanciaFormateada metros", Toast.LENGTH_LONG).show()*/
+    }
+
+    private fun drawRoute(start: GeoPoint, finish: GeoPoint) {
+        val routePoints = ArrayList<GeoPoint>()
+        routePoints.add(start)
+        routePoints.add(finish)
+
+        val road = roadManager.getRoad(routePoints)
+        Log.i("OSM_acticity", "Route length: ${road.mLength} km")
+        Log.i("OSM_acticity", "Duration: ${road.mDuration / 60} min")
+
+        val distancia = road.mLength * 1000
         val distanciaFormateada = String.format(Locale.getDefault(), "%.2f", distancia)
         Toast.makeText(this, "Distancia a marcador: $distanciaFormateada metros", Toast.LENGTH_LONG).show()
+
+        roadOverlay?.let { map.overlays.remove(it) }  // eliminar ruta anterior si hay
+
+        roadOverlay = RoadManager.buildRoadOverlay(road)
+        map.overlays.add(roadOverlay)
+        map.invalidate()
     }
+
 
 
 
