@@ -2,6 +2,7 @@ package com.example.taller2
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -32,6 +33,7 @@ import org.osmdroid.bonuspack.routing.RoadManager
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.TilesOverlay
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.io.File
@@ -53,6 +55,7 @@ class MapaActivity : AppCompatActivity() {
     private var lastLocation: GeoPoint? = null
     private val gson = Gson()
     private val jsonFile = "ubicaciones.json"
+    private var modoOscuroActivo = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +72,7 @@ class MapaActivity : AppCompatActivity() {
         lightListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent) {
                 val lux = event.values[0]
+                Log.d("SENSOR_LUZ", "Lux actual: $lux")
                 cambiarEstiloMapaSegunLuz(lux)
             }
 
@@ -186,15 +190,19 @@ class MapaActivity : AppCompatActivity() {
     }
 
     private fun cambiarEstiloMapaSegunLuz(lux: Float) {
-        // Si luz es baja (< 50 lux), modo oscuro. Si no, modo claro.
-        val nuevaFuente = if (lux < 50) {
-            TileSourceFactory.USGS_SAT  // estilo oscuro
-        } else {
-            TileSourceFactory.MAPNIK   // estilo claro
-        }
+        val tilesOverlay = map.overlayManager.tilesOverlay
 
-        if (map.tileProvider.tileSource != nuevaFuente) {
-            map.setTileSource(nuevaFuente)
+        if (lux < 5 && !modoOscuroActivo) {
+            // Activar modo oscuro
+            tilesOverlay.setColorFilter(TilesOverlay.INVERT_COLORS)
+            cambiarColorRutas(Color.CYAN)
+            modoOscuroActivo = true
+            map.invalidate()
+        } else if (lux >= 5 && modoOscuroActivo) {
+            // Volver a modo claro
+            tilesOverlay.setColorFilter(null)
+            cambiarColorRutas(Color.BLUE)
+            modoOscuroActivo = false
             map.invalidate()
         }
     }
@@ -273,6 +281,14 @@ class MapaActivity : AppCompatActivity() {
         roadOverlay = RoadManager.buildRoadOverlay(road)
         map.overlays.add(roadOverlay)
         map.invalidate()
+    }
+
+    private fun cambiarColorRutas(nuevoColor: Int) {
+        for (overlay in map.overlays) {
+            if (overlay is Polyline) {
+                overlay.outlinePaint.color = nuevoColor
+            }
+        }
     }
 
 
