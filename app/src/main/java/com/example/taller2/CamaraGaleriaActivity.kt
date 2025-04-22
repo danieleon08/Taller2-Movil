@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
@@ -96,6 +97,7 @@ class CamaraGaleriaActivity : AppCompatActivity() {
                 REQUEST_CAMERA -> {
                     val bitmap = BitmapFactory.decodeFile(currentPhotoPath)
                     imageView.setImageBitmap(bitmap)
+                    guardarEnGaleria()  //Aquí se guarda en la galería
                     Toast.makeText(this, "Imagen guardada en:\n$currentPhotoPath", Toast.LENGTH_LONG).show()
                 }
                 REQUEST_GALLERY -> {
@@ -105,4 +107,28 @@ class CamaraGaleriaActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun guardarEnGaleria() {
+        val contentValues = android.content.ContentValues().apply {
+            put(MediaStore.Images.Media.DISPLAY_NAME, "IMG_${System.currentTimeMillis()}.jpg")
+            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+            put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+            put(MediaStore.Images.Media.IS_PENDING, 1)
+        }
+
+        val resolver = contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        uri?.let {
+            resolver.openOutputStream(it)?.use { outputStream ->
+                val bitmap = BitmapFactory.decodeFile(currentPhotoPath)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            }
+
+            contentValues.clear()
+            contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+            resolver.update(uri, contentValues, null, null)
+        }
+    }
+
 }
