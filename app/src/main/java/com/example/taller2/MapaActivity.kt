@@ -13,6 +13,7 @@ import android.util.Log
 import android.widget.Toast
 
 import android.location.Geocoder
+import com.google.android.gms.location.LocationRequest
 import android.os.StrictMode
 import android.view.MotionEvent
 import android.widget.EditText
@@ -20,6 +21,11 @@ import android.view.inputmethod.EditorInfo
 
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import org.osmdroid.api.IMapController
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
@@ -57,10 +63,25 @@ class MapaActivity : AppCompatActivity() {
     private val jsonFile = "ubicaciones.json"
     private var modoOscuroActivo = false
 
+    //Crear proveedor de localizacion
+    lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
+
+    //Suscribirno a cambios
+    lateinit var mLocationRequest: LocationRequest
+
+    //callback a localizacion
+    private lateinit var mLocationCallback: LocationCallback
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
         setContentView(R.layout.activity_mapa)
+
+        //Inicializar el proveedor
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+
+        //Metodo propio
+        mLocationRequest = createLocationRequest()
 
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
@@ -104,14 +125,14 @@ class MapaActivity : AppCompatActivity() {
             runOnUiThread {
                 location?.let {
                     val point = GeoPoint(it.latitude, it.longitude)
-                    colocarMarcador(point)
+                    //colocarMarcador(point)
                     controller.animateTo(point)
                     guardarUbicacion(point)
                     lastLocation = it
                 }
             }
         }
-
+        /*/
         locationOverlay.myLocationProvider.startLocationProvider { loc, _ ->
             val point = GeoPoint(loc.latitude, loc.longitude)
             if (lastLocation == null || point.distanceToAsDouble(lastLocation) > 30) {
@@ -120,7 +141,24 @@ class MapaActivity : AppCompatActivity() {
                 guardarUbicacion(point)
                 controller.animateTo(point)
             }
+        }*/
+
+        mLocationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val location = locationResult.lastLocation
+                Log.i("LOCATION", "Location update in the callback: $location")
+                if (location != null) {
+                    val point = GeoPoint(location.latitude,location.longitude)
+                    if (lastLocation == null || point.distanceToAsDouble(lastLocation) > 30) {
+                        lastLocation = point
+                        colocarMarcador(point)
+                        guardarUbicacion(point)
+                        controller.animateTo(point)
+                    }
+                }
+            }
         }
+        startLocationUpdates()
 
         val eventosMapa = object : MapEventsReceiver {
             override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -155,6 +193,22 @@ class MapaActivity : AppCompatActivity() {
 
 
     }
+
+    private fun startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED)
+        {
+            mFusedLocationProviderClient.requestLocationUpdates(mLocationRequest,mLocationCallback,null)
+        }
+    }
+
+
+    //Constructor de peticiones para cambios en localizacion
+    private fun createLocationRequest(): LocationRequest =
+        LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY,10000).apply { setMinUpdateIntervalMillis(5000) }.build()
 
     private fun colocarMarcador(geoPoint: GeoPoint) {
         if (::marker.isInitialized) {

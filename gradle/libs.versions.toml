@@ -13,6 +13,7 @@ constraintlayout = "2.2.1"
 osmbonuspack = "6.9.0"
 osmdroidAndroid = "6.1.16"
 osmdroidAndroidVersion = "6.1.14"
+playServicesLocation = "21.3.0"
 preferenceKtx = "1.2.1"
 
 [libraries]
@@ -30,6 +31,7 @@ osmbonuspack = { module = "com.github.MKergall:osmbonuspack", version.ref = "osm
 osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
 osmdroid-android-v6114 = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroidVersion" }
 osmdroid-widgets = { module = "org.osmdroid:osmdroid-widgets", version.ref = "osmdroidAndroid" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version = "8.8.0" }
